@@ -1,0 +1,46 @@
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#define N 5  
+
+pthread_mutex_t garfos[N]; 
+
+void* filosofo(void* num) {
+    int id = *(int*)num;
+
+    while (1) {
+        printf("Filósofo %d está pensando...\n", id);
+        sleep(1);
+        
+        pthread_mutex_lock(&garfos[id]);
+        pthread_mutex_lock(&garfos[(id + 1) % N]);
+
+        printf("Filósofo %d está comendo 🍝\n", id);
+        sleep(2);
+        
+        pthread_mutex_unlock(&garfos[id]);
+        pthread_mutex_unlock(&garfos[(id + 1) % N]);
+
+        printf("Filósofo %d terminou de comer e voltou a pensar.\n", id);
+    }
+}
+
+int main() {
+    pthread_t threads[N];
+    int ids[N];
+
+    for (int i = 0; i < N; i++)
+        pthread_mutex_init(&garfos[i], NULL);
+
+    for (int i = 0; i < N; i++) {
+        ids[i] = i;
+        pthread_create(&threads[i], NULL, filosofo, &ids[i]);
+    }
+
+    for (int i = 0; i < N; i++)
+        pthread_join(threads[i], NULL);
+
+    return 0;
+}
